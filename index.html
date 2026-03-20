@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mi Evangeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:#01080f;
+  color:#d8eeff;
+  font-family:'Cormorant Garamond',serif;
+  overflow-x:hidden;
+}
+
+/* ══════════════════════
+   INTRO SCREEN
+══════════════════════ */
+#intro{
+  position:fixed;inset:0;
+  background:#010810;
+  z-index:100;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+#intro.hide{pointer-events:none;}
+#intro-canvas{position:absolute;inset:0;pointer-events:none;}
+
+.intro-content{
+  position:relative;z-index:2;
+  text-align:center;
+  display:flex;flex-direction:column;
+  align-items:center;gap:2.8rem;
+}
+
+/* Evangeline Star SVG */
+.evangeline-star{
+  position:relative;
+  margin:0 auto 1rem;
+  z-index:1;
+  pointer-events:none;
+  opacity:0;
+  animation:starAppear 3s ease forwards .3s;
+}
+@keyframes starAppear{
+  0%{opacity:0;transform:scale(.3)}
+  60%{opacity:1;transform:scale(1.05)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+.intro-eyebrow{
+  font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;
+  color:rgba(160,220,255,.35);
+  opacity:0;animation:fadeIn 2s ease forwards 0.8s;
+}
+
+.glow-title{
+  font-family:'Caveat',cursive;
+  font-size:clamp(2.2rem,8vw,3.8rem);
+  font-weight:600;
+  color:transparent;
+  text-shadow:none;
+  opacity:1;
+  letter-spacing:.08em;
+  line-height:1.15;
+}
+.glow-title .line1{display:block;}
+.glow-title .accent{display:block;}
+
+/* typewriter letters */
+.tw-letter{
+  display:inline-block;
+  opacity:0;
+  transform:translateY(8px);
+  color:rgba(220,245,255,.9);
+  text-shadow:0 0 18px rgba(100,200,255,.55),0 0 45px rgba(70,160,255,.2);
+  transition:opacity .3s ease,transform .3s ease,text-shadow .5s ease;
+}
+.tw-letter.vis{
+  opacity:1;
+  transform:translateY(0);
+}
+.tw-letter.glow{
+  text-shadow:0 0 28px rgba(180,255,120,.9),0 0 60px rgba(130,240,90,.4);
+}
+.tw-letter.accent-letter{
+  color:#c8f090;
+  text-shadow:0 0 20px rgba(150,255,100,.7),0 0 50px rgba(100,230,80,.3);
+}
+.tw-letter.accent-letter.glow{
+  text-shadow:0 0 35px rgba(180,255,120,1),0 0 70px rgba(130,240,90,.6),0 0 110px rgba(100,220,70,.2);
+}
+
+/* play button */
+#play-btn{
+  position:relative;
+  width:78px;height:78px;border-radius:50%;
+  border:1.5px solid rgba(100,180,255,.35);
+  background:rgba(5,20,40,.7);
+  backdrop-filter:blur(8px);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .4s;
+  opacity:0;animation:fadeIn 1.5s ease forwards 2.8s;
+  box-shadow:0 0 25px rgba(60,150,255,.12),0 0 60px rgba(40,120,255,.06);
+}
+#play-btn:hover{
+  border-color:rgba(160,210,255,.7);
+  box-shadow:0 0 35px rgba(80,180,255,.35),0 0 80px rgba(60,150,255,.15);
+  transform:scale(1.08);
+}
+.btn-ring {position:absolute;inset:-9px; border-radius:50%;border:1px solid rgba(100,180,255,.18);animation:rp 2.8s ease-in-out infinite;}
+.btn-ring2{position:absolute;inset:-18px;border-radius:50%;border:1px solid rgba(100,180,255,.08);animation:rp 2.8s ease-in-out infinite .9s;}
+@keyframes rp{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.07);opacity:1}}
+.btn-label{
+  position:absolute;bottom:-2.2rem;
+  font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;
+  color:rgba(150,210,255,.4);white-space:nowrap;
+}
+
+/* button particles canvas */
+#btn-particles{
+  position:absolute;
+  inset:-40px;
+  pointer-events:none;
+}
+
+/* light curtain removed — was causing visible div artifact */
+
+/* ══════════════════════
+   WORLD
+══════════════════════ */
+#world{opacity:0;transition:opacity 2.8s ease;pointer-events:none;}
+#world.show{opacity:1;pointer-events:all;}
+
+#sky-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#ff-canvas {position:fixed;inset:0;z-index:1;pointer-events:none;}
+
+/* nebulas pantano */
+.nb{position:fixed;border-radius:50%;filter:blur(75px);pointer-events:none;z-index:0;}
+
+/* swamp fog layers */
+.fog-layer{
+  position:fixed;
+  width:200%;height:120px;
+  bottom:0;left:-50%;
+  z-index:2;
+  pointer-events:none;
+  opacity:.035;
+  background:linear-gradient(90deg,transparent 0%,rgba(100,140,180,.15) 30%,rgba(80,120,160,.08) 50%,rgba(100,140,180,.12) 70%,transparent 100%);
+  filter:blur(50px);
+  will-change:transform;
+}
+.fog-layer.f1{animation:fogDrift 55s linear infinite;bottom:2%;}
+.fog-layer.f2{animation:fogDrift 70s linear infinite reverse;bottom:10%;opacity:.025;}
+.fog-layer.f3{animation:fogDrift 90s linear infinite;bottom:20%;opacity:.02;height:80px;}
+@keyframes fogDrift{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(50%)}
+}
+
+/* water waves removed — was causing visible dark bars */
+
+/* ══════════════════════
+   SCENES
+══════════════════════ */
+.scene{
+  position:relative;z-index:5;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:7rem 2rem 6rem;
+  text-align:center;overflow:hidden;
+}
+
+.parallax-wrap{position:relative;width:100%;display:flex;align-items:center;justify-content:center;margin-bottom:2rem;}
+.p-layer{position:absolute;will-change:transform;pointer-events:none;}
+.zoom-wrap{will-change:transform;transition:transform .05s linear;}
+
+.scene-img{
+  display:block;
+  filter:drop-shadow(0 0 28px rgba(80,180,255,.35)) drop-shadow(0 0 70px rgba(40,140,255,.15));
+  transition:filter .3s;
+}
+
+/* lily pad bob animation */
+.lily-bob{animation:lilyBob 4s ease-in-out infinite;}
+@keyframes lilyBob{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+
+.scene-eyebrow{
+  font-size:.6rem;letter-spacing:.4em;text-transform:uppercase;
+  color:rgba(140,200,255,.42);
+  margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.8rem;
+}
+.scene-eyebrow::before,.scene-eyebrow::after{content:'';display:block;width:28px;height:1px;background:rgba(100,180,255,.2);}
+
+.scene-title{
+  font-family:'Caveat',cursive;
+  font-size:clamp(3rem,9vw,5.5rem);
+  font-weight:600;line-height:1.05;
+  margin-bottom:1.8rem;
+  text-shadow:0 0 40px rgba(60,160,255,.2);
+}
+
+.msg-card{
+  max-width:560px;margin:0 auto;
+  background:rgba(2,12,28,.6);
+  border:1px solid rgba(80,160,255,.1);
+  border-radius:3px;
+  padding:2.8rem 3rem;
+  position:relative;
+  backdrop-filter:blur(10px);
+  box-shadow:0 0 50px rgba(20,80,200,.06),inset 0 0 30px rgba(20,80,255,.015);
+}
+.msg-card::before{content:'\201C';position:absolute;top:-.8rem;left:1rem;font-family:'Cormorant Garamond',serif;font-size:5rem;line-height:1;color:rgba(100,180,255,.07);}
+.msg-card p{font-size:clamp(1.05rem,2.4vw,1.2rem);line-height:2.05;color:rgba(210,235,255,.78);}
+.msg-card p em{color:#a8d8ff;font-style:italic;}
+.msg-card p strong{color:#e0f0ff;font-weight:400;}
+.quote-line{margin-top:1.8rem;padding-top:1.4rem;border-top:1px solid rgba(80,160,255,.1);font-style:italic;font-size:clamp(.9rem,2vw,1.05rem);color:rgba(160,210,255,.35);line-height:1.7;}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(36px);transition:opacity 1.2s ease,transform 1.2s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+.r1{transition-delay:.1s}.r2{transition-delay:.28s}.r3{transition-delay:.48s}.r4{transition-delay:.68s}
+
+
+/* dividers */
+.swamp-div{position:relative;z-index:5;display:flex;align-items:center;justify-content:center;gap:.8rem;padding:2rem 0;}
+.sdl{width:80px;height:1px;background:linear-gradient(to right,transparent,rgba(80,160,255,.18),transparent);}
+.sds{font-size:.9rem;color:rgba(100,180,255,.25);}
+
+/* final */
+.final-sig{font-family:'Caveat',cursive;font-size:clamp(2.2rem,7vw,4rem);font-weight:600;color:#b0d8ff;text-shadow:0 0 40px rgba(80,180,255,.3);margin-top:2rem;}
+.final-sig small{display:block;font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;font-style:normal;color:rgba(160,210,255,.3);margin-top:.4rem;font-family:'Cormorant Garamond',serif;}
+
+/* scene bg tints */
+#s-open    {background:radial-gradient(ellipse 70% 55% at 50% 60%,rgba(10,40,80,.5) 0%,transparent 70%);}
+#s-heart   {background:radial-gradient(ellipse 65% 50% at 50% 50%,rgba(15,35,70,.45) 0%,transparent 70%);}
+#s-ray     {background:radial-gradient(ellipse 60% 45% at 50% 50%,rgba(20,50,30,.4) 0%,transparent 65%);}
+#s-dance   {background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(10,30,70,.5) 0%,transparent 70%);}
+#s-nenufar {background:radial-gradient(ellipse 60% 45% at 50% 50%,rgba(15,50,45,.38) 0%,transparent 65%);}
+#s-close   {background:radial-gradient(ellipse 65% 55% at 50% 55%,rgba(10,35,75,.5) 0%,transparent 70%);}
+
+/* scroll hint */
+#scroll-hint{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:.5rem;transition:opacity .6s;pointer-events:none;}
+#scroll-hint span{font-size:.55rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(120,190,255,.2);}
+.sh-line{width:1px;height:40px;background:linear-gradient(to bottom,rgba(100,180,255,.3),transparent);animation:shp 2s ease-in-out infinite;}
+@keyframes shp{0%,100%{opacity:.2}50%{opacity:.7}}
+
+/* ══════════════════════
+   CORAZON J+M SVG
+══════════════════════ */
+.heart-scene{
+  position:relative;
+  width:280px;height:280px;
+  margin:0 auto 1rem;
+  background:transparent;
+}
+.heart-scene svg{overflow:visible;background:transparent;}
+
+#heart-path{
+  stroke-dasharray:800;
+  stroke-dashoffset:800;
+}
+#heart-path.draw{
+  animation:drawHeart 3s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes drawHeart{
+  0%  {stroke-dashoffset:800;opacity:.3;stroke-width:2}
+  40% {opacity:.6;stroke-width:3.5}
+  100%{stroke-dashoffset:0;opacity:1;stroke-width:4.5}
+}
+
+/* neon glow intensify */
+#heart-glow-el{
+  stroke-dasharray:800;
+  stroke-dashoffset:800;
+}
+#heart-glow-el.draw{
+  animation:drawHeartGlow 3s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes drawHeartGlow{
+  0%  {stroke-dashoffset:800;opacity:0}
+  40% {opacity:.15}
+  100%{stroke-dashoffset:0;opacity:.45}
+}
+
+/* flecha */
+#arrow-path{
+  stroke-dasharray:300;stroke-dashoffset:300;opacity:0;
+}
+#arrow-path.draw{
+  animation:drawArrow 1.2s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes drawArrow{
+  0%{stroke-dashoffset:300;opacity:1}
+  100%{stroke-dashoffset:0;opacity:1}
+}
+
+/* iniciales handwritten */
+.heart-initials{
+  opacity:0;
+  font-family:'Caveat',cursive;
+}
+#initials-J,#initials-plus,#initials-M{
+  opacity:0;
+}
+
+/* Ray sprite for heart scene */
+#ray-sprite{
+  opacity:0;
+  transition:none;
+}
+
+/* heart particle canvas */
+#heart-particles{
+  position:absolute;inset:0;
+  pointer-events:none;
+  z-index:5;
+  background:transparent !important;
+}
+
+.lotus-glow{
+  animation:lotusPulse 3s ease-in-out infinite;
+}
+@keyframes lotusPulse{
+  0%,100%{opacity:.6;filter:blur(2px)}
+  50%{opacity:1;filter:blur(1px)}
+}
+
+/* scroll-triggered magic animations */
+.reveal-scale{
+  opacity:0;transform:scale(.85);
+  transition:opacity 1.4s ease,transform 1.4s ease;
+}
+.reveal-scale.in{opacity:1;transform:scale(1);}
+
+.reveal-glow{
+  opacity:0;transform:translateY(30px);
+  transition:opacity 1.2s ease,transform 1.2s ease;
+}
+.reveal-glow.in{
+  opacity:1;transform:translateY(0);
+}
+
+/* scene images float animation on reveal */
+.scene-img-float{
+  animation:none;
+}
+.scene-img-float.floating{
+  animation:gentleFloat 6s ease-in-out infinite;
+}
+@keyframes gentleFloat{
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  33%{transform:translateY(-8px) rotate(.5deg)}
+  66%{transform:translateY(4px) rotate(-.3deg)}
+}
+
+/* sparkle on scroll dividers */
+.swamp-div .sds{
+  transition:text-shadow .6s ease, transform .6s ease;
+}
+.swamp-div.in .sds{
+  text-shadow:0 0 12px rgba(200,240,255,.5),0 0 30px rgba(140,200,255,.2);
+  transform:scale(1.3);
+}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* mobile-first: this is a mobile page */
+@media(max-width:768px){
+  .msg-card{padding:1.8rem 1.4rem;max-width:92vw;}
+  .scene{padding:4rem 1.2rem 3rem;}
+  .heart-scene{width:250px;height:250px;}
+  .scene-title{font-size:clamp(2.4rem,8vw,4rem);margin-bottom:1.2rem;}
+  /* center frogs on mobile */
+  .dance-wrap{height:300px !important;}
+  .dance-wrap .p-layer.zoom-wrap[data-speed="0.32"]{left:calc(50% - 55px) !important;}
+  .dance-wrap .p-layer.zoom-wrap[data-speed="0.38"]{left:calc(50% + 55px) !important;}
+  .dance-wrap .p-layer.zoom-wrap img{height:180px !important;max-width:42vw !important;}
+  .parallax-wrap{margin-bottom:1.2rem;}
+}
+
+/* ── AUDIO FLOAT BTN ── */
+#audio-float{
+  position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;
+  width:44px;height:44px;border-radius:50%;
+  border:1.5px solid rgba(100,180,255,.28);
+  background:rgba(1,8,15,.85);
+  backdrop-filter:blur(10px);
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:border-color .3s,box-shadow .3s;
+  -webkit-tap-highlight-color:transparent;
+}
+#audio-float.visible{display:flex;}
+#audio-float:hover{
+  border-color:rgba(160,210,255,.6);
+  box-shadow:0 0 20px rgba(80,160,255,.25);
+}
+#audio-float.playing{
+  border-color:rgba(140,200,255,.45);
+  box-shadow:0 0 18px rgba(80,180,255,.22),0 0 40px rgba(60,150,255,.1);
+}
+
+/* sound wave arcs */
+.sound-waves{
+  position:absolute;inset:0;
+  pointer-events:none;
+}
+.sound-wave{
+  position:absolute;
+  top:50%;left:50%;
+  width:100%;height:100%;
+  border:1.5px solid rgba(140,200,255,.4);
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(1);
+  opacity:0;
+}
+#audio-float.playing .sound-wave{
+  animation:soundWave 2s ease-out infinite;
+}
+.sound-wave:nth-child(2){animation-delay:.4s !important;}
+.sound-wave:nth-child(3){animation-delay:.8s !important;}
+@keyframes soundWave{
+  0%{transform:translate(-50%,-50%) scale(1);opacity:.5}
+  100%{transform:translate(-50%,-50%) scale(2.2);opacity:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ INTRO ══════ -->
+<div id="intro">
+  <canvas id="intro-canvas"></canvas>
+
+  <!-- Old star hidden, new one inside intro-content -->
+  <div id="evangeline-star" style="display:none;">
+    <svg width="160" height="200" viewBox="-80 -100 160 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="starHalo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fff8d0" stop-opacity=".9"/>
+          <stop offset="30%" stop-color="#f5e060" stop-opacity=".4"/>
+          <stop offset="60%" stop-color="#e8c030" stop-opacity=".12"/>
+          <stop offset="100%" stop-color="#e8c030" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="starBlur">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feComposite in="SourceGraphic" in2="b" operator="over"/>
+        </filter>
+        <filter id="starBlur2">
+          <feGaussianBlur stdDeviation="8"/>
+        </filter>
+      </defs>
+      <!-- outer halo breathing -->
+      <circle cx="0" cy="0" r="60" fill="url(#starHalo)" opacity=".7">
+        <animate attributeName="r" values="55;68;55" dur="4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".6;.85;.6" dur="4s" repeatCount="indefinite"/>
+      </circle>
+      <!-- secondary halo -->
+      <circle cx="0" cy="0" r="35" fill="url(#starHalo)" opacity=".5" style="filter:url(#starBlur2)">
+        <animate attributeName="r" values="30;40;30" dur="3.2s" repeatCount="indefinite"/>
+      </circle>
+      <!-- main vertical ray (longer) -->
+      <line x1="0" y1="-90" x2="0" y2="90" stroke="#fff8d0" stroke-width="2.5" opacity=".9" stroke-linecap="round" style="filter:url(#starBlur)">
+        <animate attributeName="y1" values="-85;-95;-85" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="y2" values="85;95;85" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".8;1;.8" dur="3s" repeatCount="indefinite"/>
+      </line>
+      <!-- main horizontal ray (shorter) -->
+      <line x1="-62" y1="0" x2="62" y2="0" stroke="#fff8d0" stroke-width="2" opacity=".85" stroke-linecap="round" style="filter:url(#starBlur)">
+        <animate attributeName="x1" values="-58;-68;-58" dur="3.5s" repeatCount="indefinite"/>
+        <animate attributeName="x2" values="58;68;58" dur="3.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values=".75;.95;.75" dur="3.5s" repeatCount="indefinite"/>
+      </line>
+      <!-- diagonal rays (very subtle, much shorter than + rays) -->
+      <line x1="-14" y1="-14" x2="14" y2="14" stroke="#f5e060" stroke-width=".7" opacity=".25" stroke-linecap="round" style="filter:url(#starBlur)">
+        <animate attributeName="opacity" values=".18;.32;.18" dur="2.8s" repeatCount="indefinite"/>
+      </line>
+      <line x1="14" y1="-14" x2="-14" y2="14" stroke="#f5e060" stroke-width=".7" opacity=".25" stroke-linecap="round" style="filter:url(#starBlur)">
+        <animate attributeName="opacity" values=".18;.32;.18" dur="3.1s" repeatCount="indefinite"/>
+      </line>
+      <!-- core glow -->
+      <circle cx="0" cy="0" r="8" fill="#fffbe8" opacity=".95" style="filter:url(#starBlur)">
+        <animate attributeName="r" values="6;10;6" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <!-- bright white core -->
+      <circle cx="0" cy="0" r="3.5" fill="#ffffff">
+        <animate attributeName="r" values="3;4.5;3" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+
+  <div class="intro-content">
+    <!-- Star moved inside content flow for centering -->
+    <div class="evangeline-star" id="evangeline-star-inline" style="margin-bottom:-.5rem;">
+      <svg width="120" height="150" viewBox="-60 -75 120 150" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="starHaloI" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff8d0" stop-opacity=".9"/>
+            <stop offset="30%" stop-color="#f5e060" stop-opacity=".4"/>
+            <stop offset="60%" stop-color="#e8c030" stop-opacity=".12"/>
+            <stop offset="100%" stop-color="#e8c030" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="sBI"><feGaussianBlur stdDeviation="3" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+          <filter id="sBI2"><feGaussianBlur stdDeviation="8"/></filter>
+        </defs>
+        <circle cx="0" cy="0" r="50" fill="url(#starHaloI)" opacity=".7">
+          <animate attributeName="r" values="45;58;45" dur="4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".5;.8;.5" dur="4s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="0" cy="0" r="30" fill="url(#starHaloI)" opacity=".4" style="filter:url(#sBI2)">
+          <animate attributeName="r" values="25;35;25" dur="3.2s" repeatCount="indefinite"/>
+        </circle>
+        <!-- vertical ray (long) -->
+        <line x1="0" y1="-70" x2="0" y2="70" stroke="#fff8d0" stroke-width="2.2" opacity=".9" stroke-linecap="round" style="filter:url(#sBI)">
+          <animate attributeName="y1" values="-65;-74;-65" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="y2" values="65;74;65" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".8;1;.8" dur="3s" repeatCount="indefinite"/>
+        </line>
+        <!-- horizontal ray (shorter) -->
+        <line x1="-48" y1="0" x2="48" y2="0" stroke="#fff8d0" stroke-width="1.8" opacity=".8" stroke-linecap="round" style="filter:url(#sBI)">
+          <animate attributeName="x1" values="-44;-52;-44" dur="3.5s" repeatCount="indefinite"/>
+          <animate attributeName="x2" values="44;52;44" dur="3.5s" repeatCount="indefinite"/>
+        </line>
+        <!-- subtle diagonals -->
+        <line x1="-10" y1="-10" x2="10" y2="10" stroke="#f5e060" stroke-width=".6" opacity=".2" stroke-linecap="round" style="filter:url(#sBI)"/>
+        <line x1="10" y1="-10" x2="-10" y2="10" stroke="#f5e060" stroke-width=".6" opacity=".2" stroke-linecap="round" style="filter:url(#sBI)"/>
+        <!-- core -->
+        <circle cx="0" cy="0" r="7" fill="#fffbe8" opacity=".95" style="filter:url(#sBI)">
+          <animate attributeName="r" values="5;9;5" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="0" cy="0" r="3" fill="#ffffff">
+          <animate attributeName="r" values="2.5;4;2.5" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+    </div>
+    <p class="intro-eyebrow">para la persona más especial de mi vida</p>
+    <h1 class="glow-title" id="glow-title">
+      <span class="line1" id="tw-line1"></span>
+      <span class="accent" id="tw-line2"></span>
+    </h1>
+    <div style="position:relative;margin-top:.5rem;">
+      <canvas id="btn-particles" width="158" height="158"></canvas>
+      <button id="play-btn" onclick="startWorld()" aria-label="Dale play">
+        <div class="btn-ring"></div>
+        <div class="btn-ring2"></div>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(160,210,255,.9)">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>
+        <span class="btn-label">dale play</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ WORLD ══════ -->
+<div id="world">
+  <!-- Audio float btn -->
+  <div id="audio-float" onclick="toggleFloat()">
+    <svg id="af-play"  width="14" height="14" viewBox="0 0 24 24" fill="rgba(160,210,255,.85)"><polygon points="5,3 19,12 5,21"/></svg>
+    <svg id="af-pause" width="14" height="14" viewBox="0 0 24 24" fill="rgba(160,210,255,.85)" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    <div class="sound-waves">
+      <div class="sound-wave"></div>
+      <div class="sound-wave"></div>
+      <div class="sound-wave"></div>
+    </div>
+  </div>
+  <canvas id="sky-canvas"></canvas>
+  <canvas id="ff-canvas"></canvas>
+
+  <!-- nebulas azul pantano -->
+  <div class="nb" style="width:700px;height:600px;top:-8%;left:-12%;background:radial-gradient(circle,rgba(10,40,120,.38),transparent 70%);"></div>
+  <div class="nb" style="width:500px;height:500px;top:25%;right:-10%;background:radial-gradient(circle,rgba(8,30,100,.3),transparent 70%);"></div>
+  <div class="nb" style="width:600px;height:400px;top:55%;left:18%;background:radial-gradient(circle,rgba(5,25,80,.32),transparent 70%);"></div>
+  <div class="nb" style="width:400px;height:500px;bottom:8%;right:5%;background:radial-gradient(circle,rgba(10,35,90,.28),transparent 70%);"></div>
+  <div class="nb" style="width:350px;height:300px;top:40%;left:5%;background:radial-gradient(circle,rgba(20,80,20,.18),transparent 70%);"></div>
+
+  <div id="scroll-hint"><span>descubrir</span><div class="sh-line"></div></div>
+
+  <!-- ════════ ESCENA 1 — Apertura ════════ -->
+  <section class="scene" id="s-open">
+    <div class="parallax-wrap" style="height:320px;">
+      <!-- Evangeline star — the one Ray looks at -->
+      <div class="p-layer" data-speed="0.03" style="z-index:1;top:-40px;">
+        <svg class="scene-evangeline-star" width="120" height="150" viewBox="-60 -75 120 150" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="evStarHalo2" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#fff8d0" stop-opacity=".85"/>
+              <stop offset="25%" stop-color="#f5e060" stop-opacity=".35"/>
+              <stop offset="55%" stop-color="#e8c030" stop-opacity=".1"/>
+              <stop offset="100%" stop-color="#e8c030" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="evBlur3"><feGaussianBlur stdDeviation="2.5" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+            <filter id="evBlur4"><feGaussianBlur stdDeviation="6"/></filter>
+          </defs>
+          <circle cx="0" cy="0" r="48" fill="url(#evStarHalo2)" opacity=".7">
+            <animate attributeName="r" values="44;54;44" dur="4s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values=".6;.85;.6" dur="4s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="0" cy="0" r="28" fill="url(#evStarHalo2)" opacity=".45" style="filter:url(#evBlur4)">
+            <animate attributeName="r" values="24;32;24" dur="3.2s" repeatCount="indefinite"/>
+          </circle>
+          <line x1="0" y1="-68" x2="0" y2="68" stroke="#fff8d0" stroke-width="2.2" opacity=".9" stroke-linecap="round" style="filter:url(#evBlur3)">
+            <animate attributeName="y1" values="-64;-72;-64" dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="y2" values="64;72;64" dur="3s" repeatCount="indefinite"/>
+          </line>
+          <line x1="-45" y1="0" x2="45" y2="0" stroke="#fff8d0" stroke-width="1.8" opacity=".8" stroke-linecap="round" style="filter:url(#evBlur3)">
+            <animate attributeName="x1" values="-42;-50;-42" dur="3.5s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="42;50;42" dur="3.5s" repeatCount="indefinite"/>
+          </line>
+          <line x1="-10" y1="-10" x2="10" y2="10" stroke="#f5e060" stroke-width=".6" opacity=".2" stroke-linecap="round" style="filter:url(#evBlur3)">
+            <animate attributeName="opacity" values=".15;.28;.15" dur="2.8s" repeatCount="indefinite"/>
+          </line>
+          <line x1="10" y1="-10" x2="-10" y2="10" stroke="#f5e060" stroke-width=".6" opacity=".2" stroke-linecap="round" style="filter:url(#evBlur3)">
+            <animate attributeName="opacity" values=".15;.28;.15" dur="3.1s" repeatCount="indefinite"/>
+          </line>
+          <circle cx="0" cy="0" r="6" fill="#fffbe8" opacity=".95" style="filter:url(#evBlur3)">
+            <animate attributeName="r" values="5;8;5" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="0" cy="0" r="2.5" fill="#ffffff">
+            <animate attributeName="r" values="2;3.5;2" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+      <!-- Ray looking up at Evangeline -->
+      <div class="p-layer zoom-wrap" data-speed="0.25" style="z-index:2;top:60px;">
+        <img src="ray.png" alt="Ray"
+             class="scene-img scene-img-float"
+             style="height:180px;max-width:55vw;object-fit:contain;
+                    filter:drop-shadow(0 0 25px rgba(200,255,80,.5)) drop-shadow(0 0 70px rgba(160,240,60,.22));"/>
+      </div>
+    </div>
+
+    <p class="scene-eyebrow reveal r1">esta noche es magica</p>
+    <h1 class="scene-title reveal r2" style="color:#c8e8ff;">
+      Mafe,<br/>eres mi luz
+    </h1>
+    <div class="msg-card reveal r3">
+      <p>
+        Hay noches en el pantano<br/>
+        que parecen sacadas de un sueno.<br/>
+        La luna ilumina el agua,<br/>
+        las luciernagas danzan entre los arboles,<br/>
+        y el mundo entero se detiene<br/>
+        como si supiera que algo hermoso esta pasando.<br/><br/>
+        <em>Tu eres esas noches para mi.</em><br/>
+        La magia que no esperaba encontrar<br/>
+        y que ya no podria imaginar perder.
+      </p>
+    </div>  </section>
+
+  <div class="swamp-div reveal"><div class="sdl"></div><span class="sds">&#10022;</span><div class="sdl"></div></div>
+
+  <!-- ════════ ESCENA 2 — Corazon J+M ════════ -->
+  <section class="scene" id="s-heart">
+
+    <p class="scene-eyebrow reveal r1" id="heart-eyebrow">j + m &middot; para siempre</p>
+
+    <!-- SVG del corazon animado -->
+    <div class="heart-scene reveal r2" id="heart-wrap">
+      <canvas id="heart-particles" width="280" height="280" style="background:transparent;"></canvas>
+      <svg viewBox="0 0 320 320" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="background:transparent;">
+        <defs>
+          <filter id="goldGlow">
+            <feGaussianBlur stdDeviation="4" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+          <filter id="goldGlow2">
+            <feGaussianBlur stdDeviation="10" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+          <filter id="goldGlow3">
+            <feGaussianBlur stdDeviation="16" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+        </defs>
+
+        <!-- outer neon glow (draws with heart) -->
+        <path id="heart-glow-el" class=""
+              d="M160,230 C160,230 68,175 68,118 C68,92 88,72 110,72 C130,72 148,84 160,100 C172,84 190,72 210,72 C232,72 252,92 252,118 C252,175 160,230 160,230 Z"
+              fill="none" stroke="#e8c030" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"
+              style="filter:url(#goldGlow3);"/>
+
+        <!-- corazon principal -->
+        <path id="heart-path"
+              d="M160,230 C160,230 68,175 68,118 C68,92 88,72 110,72 C130,72 148,84 160,100 C172,84 190,72 210,72 C232,72 252,92 252,118 C252,175 160,230 160,230 Z"
+              fill="none" stroke="#f5c840" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"
+              style="filter:url(#goldGlow);"/>
+
+        <!-- flecha a traves del corazon -->
+        <path id="arrow-path"
+              d="M72,90 L248,210"
+              fill="none" stroke="#f5c840" stroke-width="3.5" stroke-linecap="round"
+              style="filter:url(#goldGlow);"/>
+        <g id="arrow-head" opacity="0">
+          <path d="M238,202 L252,210 L244,196" fill="none" stroke="#f5c840" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="filter:url(#goldGlow);"/>
+        </g>
+        <g id="arrow-tail" opacity="0">
+          <path d="M72,90 L60,78 M72,90 L58,92" fill="none" stroke="#f5c840" stroke-width="2.5" stroke-linecap="round" style="filter:url(#goldGlow);"/>
+        </g>
+
+        <!-- iniciales J+M (handwritten reveal) -->
+        <text id="initials-J"
+              x="138" y="255"
+              text-anchor="middle"
+              font-family="'Caveat',cursive"
+              font-size="28" font-weight="600"
+              fill="#f5c840"
+              style="filter:url(#goldGlow);opacity:0;">J</text>
+        <text id="initials-plus"
+              x="162" y="253"
+              text-anchor="middle"
+              font-family="'Caveat',cursive"
+              font-size="22" font-weight="600"
+              fill="#f5c840"
+              style="filter:url(#goldGlow);opacity:0;">+</text>
+        <text id="initials-M"
+              x="188" y="255"
+              text-anchor="middle"
+              font-family="'Caveat',cursive"
+              font-size="28" font-weight="600"
+              fill="#f5c840"
+              style="filter:url(#goldGlow);opacity:0;">M</text>
+
+        <!-- Ray sprite -->
+        <image id="ray-sprite" href="ray.png"
+               x="38" y="38" width="55" height="55"
+               style="filter:drop-shadow(0 0 12px rgba(200,255,80,.8)) drop-shadow(0 0 25px rgba(180,240,60,.5));opacity:0;"/>
+
+      </svg>
+    </div>
+
+    <div class="msg-card reveal r3">
+      <p>
+        Ray grabo ese corazon en el arbol<br/>
+        con toda la luz que llevaba dentro.<br/>
+        Porque cuando uno ama de verdad<br/>
+        quiere que el mundo entero lo sepa &mdash;<br/>
+        quiere dejarlo grabado en algun lugar<br/>
+        que no se borre con el tiempo.<br/><br/>
+        <em>Asi te llevo a ti.</em><br/>
+        Grabada. Permanente.<br/>
+        <strong>J + M &middot; para siempre.</strong>
+      </p>
+    </div>  </section>
+
+  <div class="swamp-div reveal"><div class="sdl"></div><span class="sds">&#10022;</span><div class="sdl"></div></div>
+
+  <!-- ════════ ESCENA 3 — Ray y Evangeline ════════ -->
+  <section class="scene" id="s-ray">
+    <div class="parallax-wrap" style="height:280px;">
+      <div class="p-layer zoom-wrap" data-speed="0.35" style="z-index:2;">
+        <img src="ray.png" alt="Ray"
+             class="scene-img scene-img-float"
+             style="height:240px;max-width:90vw;object-fit:contain;
+                    filter:drop-shadow(0 0 35px rgba(200,255,80,.55)) drop-shadow(0 0 90px rgba(160,240,60,.22));"/>
+      </div>
+    </div>
+    <p class="scene-eyebrow reveal r1">como ray y evangeline</p>
+    <h2 class="scene-title reveal r2" style="color:#c8ffa0;">Asi te amo yo</h2>
+    <div class="msg-card reveal r3">
+      <p>
+        Ray amaba a Evangeline con una ternura sin limites.<br/>
+        Sin importar el tamano, sin importar la distancia,<br/>
+        sin importar que nadie mas lo entendiera.<br/>
+        <em>La amaba porque si, porque era suya,</em><br/>
+        porque en ese amor encontro su razon.<br/><br/>
+        Asi te amo yo a ti &mdash;<br/>
+        con esa misma ternura absurda y hermosa,<br/>
+        con esa certeza tranquila de quien sabe<br/>
+        que encontro algo que no se repite.<br/>
+        <strong>Contigo me sobra el mundo.</strong>
+      </p>
+    </div>  </section>
+
+  <div class="swamp-div reveal"><div class="sdl"></div><span class="sds">&#10022;</span><div class="sdl"></div></div>
+
+  <!-- ════════ ESCENA 4 — El baile ════════ -->
+  <section class="scene" id="s-dance">
+    <div class="parallax-wrap" style="height:300px;">
+      <div class="p-layer zoom-wrap" data-speed="0.3" style="z-index:2;">
+        <img src="naveen-sapo.png" alt="Naveen sapo"
+             class="scene-img scene-img-float"
+             style="height:260px;max-width:70vw;object-fit:contain;
+                    filter:drop-shadow(0 0 30px rgba(120,180,255,.4)) drop-shadow(0 0 80px rgba(80,140,255,.18));"/>
+      </div>
+    </div>
+    <p class="scene-eyebrow reveal r1">el baile del pantano</p>
+    <h2 class="scene-title reveal r2" style="color:#b8d8ff;">Eres mi Evangeline</h2>
+    <div class="msg-card reveal r3">
+      <p>
+        Evangeline no era una estrella cualquiera.<br/>
+        Era <em>su</em> estrella &mdash; la que Ray miraba cada noche,<br/>
+        la que lo guiaba, la que lo hacia sentir<br/>
+        que el amor mas grande que existe<br/>
+        vale cada momento de espera.<br/><br/>
+        Tu eres eso para mi, Mafe.<br/>
+        <strong>Mi Evangeline.</strong><br/>
+        La que me ilumina aunque este lejos.<br/>
+        La que me orienta cuando no se hacia donde ir.<br/>
+        La estrella que elegi, y que elijo cada dia.
+      </p>
+    </div>  </section>
+
+  <div class="swamp-div reveal"><div class="sdl"></div><span class="sds">&#10022;</span><div class="sdl"></div></div>
+
+  <!-- ════════ ESCENA 5 — Nenufar ════════ -->
+  <section class="scene" id="s-nenufar">
+    <div class="parallax-wrap" style="height:260px;">
+      <div class="p-layer" data-speed="0.06" style="z-index:1;opacity:.25;width:100%;">
+        <svg width="100%" height="120" viewBox="0 0 400 120">
+          <ellipse cx="200" cy="90" rx="180" ry="22" fill="rgba(20,80,140,.3)"/>
+          <path d="M30,100 Q100,88 170,100 Q240,112 310,100 Q360,92 380,100" fill="none" stroke="rgba(80,160,220,.2)" stroke-width=".8"/>
+          <path d="M20,110 Q90,100 160,110 Q230,120 300,110" fill="none" stroke="rgba(80,160,220,.12)" stroke-width=".6"/>
+        </svg>
+      </div>
+      <div class="p-layer zoom-wrap lily-bob" data-speed="0.28" style="z-index:2;">
+        <img src="nenufar.png" alt="Nenufar"
+             class="scene-img"
+             style="height:220px;max-width:90vw;object-fit:contain;
+                    filter:drop-shadow(0 0 30px rgba(220,80,120,.5)) drop-shadow(0 0 80px rgba(180,40,100,.22));"/>
+      </div>
+    </div>
+    <p class="scene-eyebrow reveal r1">lo que florece entre nosotros</p>
+    <h2 class="scene-title reveal r2" style="color:#a8d8ff;">Construimos algo real</h2>
+    <div class="msg-card reveal r3">
+      <p>
+        Las flores del pantano no crecen en jardines perfectos.<br/>
+        Crecen en el agua, en lo incierto,<br/>
+        en los lugares que nadie esperaria.<br/>
+        Y aun asi son hermosas &mdash;<br/>
+        <em>quizas por eso son hermosas.</em><br/><br/>
+        Lo que hay entre tu y yo<br/>
+        crecio asi tambien: sin manual, sin garantias,<br/>
+        con distancia y con fe.<br/>
+        Y mira lo que tenemos &mdash;<br/>
+        <strong>algo real, algo nuestro, algo que vale todo.</strong>
+      </p>
+    </div>  </section>
+
+  <div class="swamp-div reveal"><div class="sdl"></div><span class="sds">&#10022;</span><div class="sdl"></div></div>
+
+  <!-- ════════ ESCENA 6 — Cierre ════════ -->
+  <section class="scene" id="s-close">
+    <div class="parallax-wrap" style="height:300px;">
+      <!-- Evangeline star above, like the closing scene -->
+      <div class="p-layer" data-speed="0.03" style="z-index:1;top:-30px;">
+        <svg class="scene-evangeline-star" width="90" height="110" viewBox="-45 -55 90 110" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="evClose" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#fff8d0" stop-opacity=".8"/>
+              <stop offset="30%" stop-color="#f5e060" stop-opacity=".3"/>
+              <stop offset="100%" stop-color="#e8c030" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="evCBlur"><feGaussianBlur stdDeviation="2" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+          </defs>
+          <circle cx="0" cy="0" r="35" fill="url(#evClose)" opacity=".6">
+            <animate attributeName="r" values="32;40;32" dur="4s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values=".5;.75;.5" dur="4s" repeatCount="indefinite"/>
+          </circle>
+          <line x1="0" y1="-48" x2="0" y2="48" stroke="#fff8d0" stroke-width="1.8" opacity=".8" stroke-linecap="round" style="filter:url(#evCBlur)">
+            <animate attributeName="y1" values="-45;-52;-45" dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="y2" values="45;52;45" dur="3s" repeatCount="indefinite"/>
+          </line>
+          <line x1="-32" y1="0" x2="32" y2="0" stroke="#fff8d0" stroke-width="1.5" opacity=".7" stroke-linecap="round" style="filter:url(#evCBlur)">
+            <animate attributeName="x1" values="-30;-36;-30" dur="3.5s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="30;36;30" dur="3.5s" repeatCount="indefinite"/>
+          </line>
+          <circle cx="0" cy="0" r="4" fill="#fffbe8" opacity=".9" style="filter:url(#evCBlur)">
+            <animate attributeName="r" values="3;5;3" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="0" cy="0" r="2" fill="#ffffff">
+            <animate attributeName="r" values="1.5;2.5;1.5" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+      <div class="p-layer zoom-wrap" data-speed="0.3" style="z-index:2;transform:scaleX(-1);">
+        <img src="tiana-sapo.png" alt="Tiana sapo"
+             class="scene-img scene-img-float"
+             style="height:260px;max-width:80vw;object-fit:contain;
+                    filter:drop-shadow(0 0 40px rgba(160,210,255,.45)) drop-shadow(0 0 100px rgba(100,170,255,.18));"/>
+      </div>
+    </div>
+    <p class="scene-eyebrow reveal r1">para siempre &middot; para ti</p>
+    <h2 class="scene-title reveal r2" style="color:#c0dcff;">Eres todo lo que anhelo</h2>
+    <div class="msg-card reveal r3">
+      <p>
+        Esta noche magica es para ti.<br/>
+        Cada luciernaga, cada nota,<br/>
+        cada palabra escrita aqui<br/>
+        es para decirte lo mismo de siempre<br/>
+        pero de una manera que nunca olvides:<br/><br/>
+        <em>Te amo, Mafe.</em><br/>
+        Profundo. Sin condiciones.<br/>
+        Con todo lo que soy y lo que sere.<br/><br/>
+        <strong>Eres mi Evangeline.</strong><br/>
+        Mi estrella. Mi flor. Mi hogar.
+      </p>
+    </div>
+    <div class="final-sig reveal r4">
+      Siempre tuyo
+      <small>Juan &#10084;</small>
+    </div>  </section>
+
+  <div style="height:6rem;position:relative;z-index:5;"></div>
+</div><!-- /world -->
+
+<audio id="bg-audio" loop preload="auto">
+  <source src="evangeline.mp3" type="audio/mpeg"/>
+</audio>
+
+<script>
+// ══════════════════════════════════
+//  PERFORMANCE: detect mobile
+// ══════════════════════════════════
+const isMobile = innerWidth < 768;
+const PARTICLE_MULT = isMobile ? 0.5 : 1;
+
+// ══════════════════════════════════
+//  TYPEWRITER EFFECT
+// ══════════════════════════════════
+(function initTypewriter(){
+  const line1Text = "Eres mi";
+  const line2Text = "Evangeline";
+  const l1 = document.getElementById('tw-line1');
+  const l2 = document.getElementById('tw-line2');
+
+  // create letter spans
+  function makeLetters(container, text, isAccent){
+    for(let i=0;i<text.length;i++){
+      const sp = document.createElement('span');
+      sp.className = 'tw-letter' + (isAccent ? ' accent-letter' : '');
+      sp.textContent = text[i] === ' ' ? '\u00A0' : text[i];
+      container.appendChild(sp);
+    }
+  }
+  makeLetters(l1, line1Text, false);
+  makeLetters(l2, line2Text, true);
+
+  // animate letters one by one
+  const allLetters = document.querySelectorAll('.tw-letter');
+  let delay = 1200; // start after eyebrow
+  allLetters.forEach((letter, i) => {
+    setTimeout(() => {
+      letter.classList.add('vis');
+      letter.classList.add('glow');
+      setTimeout(() => letter.classList.remove('glow'), 400);
+    }, delay + i * 95);
+  });
+})();
+
+// ══════════════════════════════════
+//  BUTTON PARTICLES
+// ══════════════════════════════════
+(function initBtnParticles(){
+  const c = document.getElementById('btn-particles');
+  if(!c) return;
+  const ctx = c.getContext('2d');
+  const W = 158, H = 158;
+  const cx = W/2, cy = H/2;
+  const particles = [];
+  const COUNT = Math.floor(18 * PARTICLE_MULT);
+
+  for(let i=0;i<COUNT;i++){
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 32 + Math.random() * 22;
+    particles.push({
+      angle, dist,
+      speed: .003 + Math.random() * .008,
+      r: .5 + Math.random() * 1.2,
+      phase: Math.random() * Math.PI * 2,
+      drift: .5 + Math.random() * .8
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      p.angle += p.speed;
+      p.phase += .02;
+      const d = p.dist + Math.sin(p.phase) * p.drift;
+      const x = cx + Math.cos(p.angle) * d;
+      const y = cy + Math.sin(p.angle) * d;
+      const a = .3 + .4 * Math.sin(p.phase);
+      ctx.beginPath();
+      ctx.arc(x, y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(160,210,255,${a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ══════════════════════════════════
+//  INTRO FIREFLIES — Bezier paths + star orbiting
+// ══════════════════════════════════
+const ic = document.getElementById('intro-canvas');
+const ictx = ic.getContext('2d');
+let IW,IH;
+function rzI(){IW=ic.width=innerWidth;IH=ic.height=innerHeight;}
+rzI(); window.addEventListener('resize',rzI);
+
+// star position for orbiting
+function getStarPos(){
+  const el = document.getElementById('evangeline-star-inline');
+  if(!el) return {x:IW/2, y:IH*.2};
+  const r = el.getBoundingClientRect();
+  return {x:r.left+r.width/2, y:r.top+r.height/2};
+}
+
+const INTRO_FF_COUNT = Math.floor(65 * PARTICLE_MULT);
+const iFF=[];
+for(let i=0;i<INTRO_FF_COUNT;i++){
+  // Bezier control points for organic movement
+  const ff = {
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    // bezier waypoints
+    tx:Math.random()*innerWidth, ty:Math.random()*innerHeight,
+    cx1:0, cy1:0, cx2:0, cy2:0,
+    t:0, dur:4+Math.random()*6,
+    sx:0, sy:0,
+    r:1.2+Math.random()*2.2,
+    ph:Math.random()*Math.PI*2,
+    sp:.018+Math.random()*.038,
+    hue:75+Math.random()*45,
+    // orbit state
+    orbiting:false, orbitT:0, orbitDur:0, orbitAngle:0
+  };
+  ff.sx = ff.x; ff.sy = ff.y;
+  newBezierTarget(ff);
+  iFF.push(ff);
+}
+
+function newBezierTarget(f){
+  f.sx = f.x; f.sy = f.y;
+  f.tx = Math.random()*IW; f.ty = Math.random()*IH;
+  f.cx1 = f.sx + (Math.random()-.5)*IW*.4;
+  f.cy1 = f.sy + (Math.random()-.5)*IH*.4;
+  f.cx2 = f.tx + (Math.random()-.5)*IW*.4;
+  f.cy2 = f.ty + (Math.random()-.5)*IH*.4;
+  f.t = 0;
+  f.dur = 4 + Math.random()*6;
+
+  // 15% chance to orbit star
+  if(Math.random() < .15 && !f.orbiting){
+    const sp = getStarPos();
+    f.tx = sp.x; f.ty = sp.y;
+    f.cx1 = f.sx + (Math.random()-.5)*200;
+    f.cy1 = f.sy + (Math.random()-.5)*200;
+    f.cx2 = sp.x + (Math.random()-.5)*100;
+    f.cy2 = sp.y + (Math.random()-.5)*100;
+    f.orbiting = true;
+    f.orbitT = 0;
+    f.orbitDur = 2 + Math.random()*2;
+    f.orbitAngle = Math.random() * Math.PI * 2;
+  }
+}
+
+function cubicBezier(t, p0, p1, p2, p3){
+  const u=1-t;
+  return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+}
+
+let introOn=true;
+let introDisperseTime = 0;
+let introDispersing = false;
+
+function drawIFF(now){
+  if(!introOn && !introDispersing){return;}
+  ictx.clearRect(0,0,IW,IH);
+
+  const dt = 1/60;
+
+  iFF.forEach(f=>{
+    f.ph+=f.sp;
+
+    if(introDispersing){
+      // fly outward
+      f.x += f.dvx;
+      f.y += f.dvy;
+      f.dvx *= 1.02;
+      f.dvy *= 1.02;
+    } else if(f.orbiting && f.t >= 1){
+      // orbiting around star
+      const sp = getStarPos();
+      f.orbitT += dt / f.orbitDur;
+      f.orbitAngle += .04;
+      const orbitR = 30 + 20 * Math.sin(f.orbitT * Math.PI);
+      f.x = sp.x + Math.cos(f.orbitAngle) * orbitR;
+      f.y = sp.y + Math.sin(f.orbitAngle) * orbitR;
+      if(f.orbitT >= 1){
+        f.orbiting = false;
+        newBezierTarget(f);
+      }
+    } else {
+      // follow bezier path
+      f.t += dt / f.dur;
+      if(f.t >= 1){
+        f.t = 1;
+        f.x = f.tx; f.y = f.ty;
+        if(!f.orbiting) newBezierTarget(f);
+      } else {
+        f.x = cubicBezier(f.t, f.sx, f.cx1, f.cx2, f.tx);
+        f.y = cubicBezier(f.t, f.sy, f.cy1, f.cy2, f.ty);
+      }
+    }
+
+    // wrap
+    if(!introDispersing){
+      if(f.x<-20)f.x=IW+20;if(f.x>IW+20)f.x=-20;
+      if(f.y<-20)f.y=IH+20;if(f.y>IH+20)f.y=-20;
+    }
+
+    const a=.35+.65*Math.sin(f.ph);
+
+    // Check if off screen during disperse
+    if(introDispersing && (f.x<-50||f.x>IW+50||f.y<-50||f.y>IH+50)) return;
+
+    // halo
+    const g=ictx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*8);
+    g.addColorStop(0,`hsla(${f.hue},100%,72%,${a*.75})`);
+    g.addColorStop(.35,`hsla(${f.hue},100%,62%,${a*.2})`);
+    g.addColorStop(1,`hsla(${f.hue},100%,50%,0)`);
+    ictx.beginPath();ictx.arc(f.x,f.y,f.r*8,0,Math.PI*2);
+    ictx.fillStyle=g;ictx.fill();
+    // core
+    ictx.beginPath();ictx.arc(f.x,f.y,f.r*(.55+.45*Math.sin(f.ph)),0,Math.PI*2);
+    ictx.fillStyle=`hsla(${f.hue},100%,88%,${a})`;ictx.fill();
+  });
+  requestAnimationFrame(drawIFF);
+}
+drawIFF(0);
+
+// ══════════════════════════════════
+//  START WORLD
+// ══════════════════════════════════
+function startWorld(){
+  // audio with 3s fade in
+  const aud=document.getElementById('bg-audio');
+  aud.volume=0;
+  aud.play().then(()=>{
+    let v=0;
+    const fadeTime = 3000; // 3 seconds
+    const steps = fadeTime / 50;
+    const increment = 0.52 / steps;
+    const fi=setInterval(()=>{
+      v=Math.min(v+increment,.52);
+      aud.volume=v;
+      if(v>=.52)clearInterval(fi);
+    },50);
+  }).catch(()=>{});
+
+  // Disperse fireflies outward
+  introDispersing = true;
+  iFF.forEach(f => {
+    const angle = Math.atan2(f.y - IH/2, f.x - IW/2) + (Math.random()-.5)*.8;
+    const speed = 3 + Math.random() * 8;
+    f.dvx = Math.cos(angle) * speed;
+    f.dvy = Math.sin(angle) * speed;
+  });
+
+  // Fade intro
+  const introEl = document.getElementById('intro');
+  introEl.style.transition = 'opacity 1.8s ease';
+  introEl.style.opacity = '0';
+
+
+
+  // show audio float
+  setTimeout(()=>{
+    const af = document.getElementById('audio-float');
+    af.classList.add('visible');
+    af.classList.add('playing');
+    document.getElementById('af-play').style.display  = 'none';
+    document.getElementById('af-pause').style.display = 'block';
+  }, 900);
+
+  setTimeout(()=>{
+    introOn=false;
+    introDispersing=false;
+    introEl.style.pointerEvents='none';
+    document.getElementById('world').classList.add('show');
+    initWorld();
+  },1800);
+}
+
+// ══════════════════════════════════
+//  TOGGLE FLOAT AUDIO BTN
+// ══════════════════════════════════
+const _aud = document.getElementById('bg-audio');
+const _af  = document.getElementById('audio-float');
+const _afP = document.getElementById('af-play');
+const _afPu= document.getElementById('af-pause');
+
+function toggleFloat(){
+  if(_aud.paused){
+    _aud.play();
+    _afP.style.display  = 'none';
+    _afPu.style.display = 'block';
+    _af.classList.add('playing');
+  } else {
+    _aud.pause();
+    _afP.style.display  = 'block';
+    _afPu.style.display = 'none';
+    _af.classList.remove('playing');
+  }
+}
+
+// ══════════════════════════════════
+//  WORLD INIT
+// ══════════════════════════════════
+function initWorld(){
+
+  // ── Sky stars (Evangeline star at top) ──
+  const sc=document.getElementById('sky-canvas');
+  const sctx=sc.getContext('2d');
+  let SW,SH,wSt=[];
+  function rzS(){SW=sc.width=innerWidth;SH=sc.height=innerHeight;}
+  rzS();window.addEventListener('resize',rzS);
+
+  const STAR_COUNT = Math.floor(160 * PARTICLE_MULT);
+  for(let i=0;i<STAR_COUNT;i++) wSt.push({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight*.55,
+    r:.3+Math.random()*1.3,
+    ph:Math.random()*Math.PI*2,
+    sp:.005+Math.random()*.016,
+    halo:Math.random()>.65,
+    teal:Math.random()>.7
+  });
+
+  // Evangeline star in sky canvas (persistent, centered)
+  const evX = SW * .5, evY = SH * .06;
+
+  function drawSky(){
+    sctx.clearRect(0,0,SW,SH);
+
+    // draw evangeline star in sky
+    drawEvangelineSky(sctx, evX, evY);
+
+    wSt.forEach(s=>{
+      s.ph+=s.sp;
+      const pulse=.5+.5*Math.sin(s.ph);
+      const r=s.r*(.6+.8*pulse);
+      const a=.2+.7*pulse;
+      const col=s.teal?'rgba(180,255,180,':'rgba(210,235,255,';
+      if(s.halo){
+        const g=sctx.createRadialGradient(s.x,s.y,0,s.x,s.y,r*7);
+        g.addColorStop(0,col+(a*.65)+')');
+        g.addColorStop(.4,col+(a*.12)+')');
+        g.addColorStop(1,col+'0)');
+        sctx.beginPath();sctx.arc(s.x,s.y,r*7,0,Math.PI*2);
+        sctx.fillStyle=g;sctx.fill();
+      }
+      sctx.beginPath();sctx.arc(s.x,s.y,r,0,Math.PI*2);
+      sctx.fillStyle=col+a+')';sctx.fill();
+    });
+    requestAnimationFrame(drawSky);
+  }
+
+  let evPhase = 0;
+  function drawEvangelineSky(ctx, x, y){
+    evPhase += .012;
+    const pulse = .85 + .15 * Math.sin(evPhase);
+    const scale = 1 + .08 * Math.sin(evPhase * 1.3);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+
+    // outer halo
+    const halo = ctx.createRadialGradient(0,0,0,0,0,40*pulse);
+    halo.addColorStop(0,'rgba(255,248,208,.4)');
+    halo.addColorStop(.3,'rgba(245,224,96,.15)');
+    halo.addColorStop(.7,'rgba(232,192,48,.05)');
+    halo.addColorStop(1,'rgba(232,192,48,0)');
+    ctx.beginPath();ctx.arc(0,0,40*pulse,0,Math.PI*2);
+    ctx.fillStyle=halo;ctx.fill();
+
+    // vertical ray
+    ctx.beginPath();ctx.moveTo(0,-28*pulse);ctx.lineTo(0,28*pulse);
+    ctx.strokeStyle=`rgba(255,248,208,${.7*pulse})`;ctx.lineWidth=1.5;ctx.stroke();
+
+    // horizontal ray
+    ctx.beginPath();ctx.moveTo(-18*pulse,0);ctx.lineTo(18*pulse,0);
+    ctx.strokeStyle=`rgba(255,248,208,${.6*pulse})`;ctx.lineWidth=1.2;ctx.stroke();
+
+    // core
+    const cg = ctx.createRadialGradient(0,0,0,0,0,5);
+    cg.addColorStop(0,`rgba(255,255,255,${.95*pulse})`);
+    cg.addColorStop(.5,`rgba(255,248,208,${.6*pulse})`);
+    cg.addColorStop(1,'rgba(245,224,96,0)');
+    ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);
+    ctx.fillStyle=cg;ctx.fill();
+
+    ctx.restore();
+  }
+
+  drawSky();
+
+  // ── World fireflies — 3 types with trails ──
+  const wfc=document.getElementById('ff-canvas');
+  const wfctx=wfc.getContext('2d');
+  let WFW,WFH,wFF=[];
+  function rzWF(){WFW=wfc.width=innerWidth;WFH=wfc.height=innerHeight;}
+  rzWF();window.addEventListener('resize',rzWF);
+
+  const WFF_COUNT = Math.floor(50 * PARTICLE_MULT);
+  for(let i=0;i<WFF_COUNT;i++){
+    // 3 types
+    let type, r;
+    const roll = Math.random();
+    if(roll < .5) { type='small'; r=1; }
+    else if(roll < .85) { type='medium'; r=2.5; }
+    else { type='large'; r=4; }
+
+    wFF.push({
+      x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+      vx:(Math.random()-.5)*.5, vy:(Math.random()-.5)*.4,
+      r,
+      type,
+      ph:Math.random()*Math.PI*2,
+      sp:.012+Math.random()*.032,
+      hue:78+Math.random()*42,
+      // trail
+      trail:[],
+      trailMax: type==='large'?12 : type==='medium'?8 : 5,
+      // pause & glow (large only)
+      pausing:false, pauseTimer:0, pauseCooldown:Math.random()*600+200,
+      glowIntensity:0
+    });
+  }
+
+  function drawWFF(){
+    wfctx.clearRect(0,0,WFW,WFH);
+    wFF.forEach(f=>{
+      f.ph+=f.sp;
+
+      // large fireflies: occasional pause & glow
+      if(f.type==='large'){
+        f.pauseCooldown--;
+        if(f.pauseCooldown<=0 && !f.pausing){
+          f.pausing=true;
+          f.pauseTimer=120; // ~2 seconds at 60fps
+          f.pauseCooldown=300+Math.random()*400;
+        }
+        if(f.pausing){
+          f.pauseTimer--;
+          f.glowIntensity = Math.min(1, f.glowIntensity + .05);
+          if(f.pauseTimer<=0){
+            f.pausing=false;
+            f.glowIntensity=0;
+          }
+        }
+      }
+
+      if(!f.pausing){
+        f.x+=f.vx+Math.sin(f.ph*.6)*.42;
+        f.y+=f.vy+Math.cos(f.ph*.42)*.3;
+      }
+      if(f.x<0)f.x=WFW;if(f.x>WFW)f.x=0;
+      if(f.y<0)f.y=WFH;if(f.y>WFH)f.y=0;
+
+      // update trail
+      f.trail.push({x:f.x, y:f.y});
+      if(f.trail.length > f.trailMax) f.trail.shift();
+
+      const a=.28+.72*Math.sin(f.ph);
+      const extraGlow = f.glowIntensity;
+
+      // draw trail
+      if(f.trail.length > 1){
+        for(let i=0;i<f.trail.length-1;i++){
+          const ta = (i/f.trail.length) * a * .3;
+          const tr = f.r * .4 * (i/f.trail.length);
+          wfctx.beginPath();
+          wfctx.arc(f.trail[i].x, f.trail[i].y, tr, 0, Math.PI*2);
+          wfctx.fillStyle=`hsla(${f.hue},100%,75%,${ta})`;
+          wfctx.fill();
+        }
+      }
+
+      // halo
+      const haloMult = f.type==='large' ? 14 : f.type==='medium' ? 10 : 7;
+      const haloAlpha = (a*.78) + extraGlow * .5;
+      const g=wfctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*haloMult);
+      g.addColorStop(0,`hsla(${f.hue},100%,75%,${Math.min(1,haloAlpha)})`);
+      g.addColorStop(.3,`hsla(${f.hue},100%,65%,${Math.min(1,haloAlpha*.25)})`);
+      g.addColorStop(1,`hsla(${f.hue},100%,55%,0)`);
+      wfctx.beginPath();wfctx.arc(f.x,f.y,f.r*haloMult,0,Math.PI*2);
+      wfctx.fillStyle=g;wfctx.fill();
+
+      // core
+      const coreR = f.r*(.5+.5*Math.sin(f.ph)) + extraGlow*2;
+      wfctx.beginPath();wfctx.arc(f.x,f.y,coreR,0,Math.PI*2);
+      wfctx.fillStyle=`hsla(${f.hue},100%,90%,${Math.min(1,a+extraGlow*.5)})`;
+      wfctx.fill();
+    });
+    requestAnimationFrame(drawWFF);
+  }
+  drawWFF();
+
+  // ── Shooting stars ──
+  if(!document.getElementById('ss-style')){
+    const ss=document.createElement('style');
+    ss.id='ss-style';
+    ss.textContent='@keyframes ss{0%{opacity:0}8%{opacity:.85}80%{opacity:.3}100%{opacity:0;transform:translate(220px,110px)}}';
+    document.head.appendChild(ss);
+  }
+  function spawnSS(){
+    const el=document.createElement('div');
+    const len=60+Math.random()*110;
+    el.style.cssText=`position:fixed;height:1px;width:${len}px;top:${Math.random()*55}vh;left:${Math.random()*72}vw;transform:rotate(${18+Math.random()*28}deg);background:linear-gradient(to right,rgba(180,220,255,0),rgba(200,230,255,.85),rgba(180,220,255,0));border-radius:2px;opacity:0;pointer-events:none;z-index:3;animation:ss ${1.2+Math.random()*2}s linear forwards;`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),4000);
+  }
+  setInterval(spawnSS,3400);setTimeout(spawnSS,700);
+
+  // ── Corazon J+M — Ray flies and draws ──
+  const heartObs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        heartObs.unobserve(e.target);
+        triggerHeart();
+      }
+    });
+  },{threshold:.3});
+  const hw=document.getElementById('heart-wrap');
+  if(hw) heartObs.observe(hw);
+
+  function triggerHeart(){
+    const heartPath = document.getElementById('heart-path');
+    const heartGlow = document.getElementById('heart-glow-el');
+    const raySpr = document.getElementById('ray-sprite');
+    const hpCanvas = document.getElementById('heart-particles');
+    const hpCtx = hpCanvas ? hpCanvas.getContext('2d') : null;
+
+    // get heart path points for Ray to follow
+    const svgPath = heartPath;
+    const totalLen = svgPath.getTotalLength();
+
+    // particle system for heart scene
+    const hParticles = [];
+    const HP_COUNT = Math.floor(40 * PARTICLE_MULT);
+
+    function spawnHeartParticle(x, y){
+      if(hParticles.length > HP_COUNT) return;
+      hParticles.push({
+        x, y,
+        vx:(Math.random()-.5)*1.5,
+        vy:(Math.random()-.5)*1.5 - .5,
+        life:1,
+        decay:.01+Math.random()*.02,
+        r:.5+Math.random()*2
+      });
+    }
+
+    let heartAnimActive = true;
+    function drawHeartParticles(){
+      if(!hpCtx) return;
+      hpCtx.clearRect(0,0,320,320);
+      for(let i=hParticles.length-1;i>=0;i--){
+        const p=hParticles[i];
+        p.x+=p.vx; p.y+=p.vy;
+        p.vy-=.01;
+        p.life-=p.decay;
+        if(p.life<=0){hParticles.splice(i,1);continue;}
+        hpCtx.beginPath();
+        hpCtx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+        hpCtx.fillStyle=`rgba(245,200,64,${p.life*.7})`;
+        hpCtx.fill();
+      }
+      if(heartAnimActive || hParticles.length > 0) requestAnimationFrame(drawHeartParticles);
+    }
+    drawHeartParticles();
+
+    // Show Ray
+    setTimeout(()=>{
+      if(raySpr) raySpr.style.opacity='1';
+    },200);
+
+    // Animate Ray along heart path while it draws
+    const drawDuration = 3000; // ms — matches CSS animation
+    let startTime = null;
+
+    heartPath.classList.add('draw');
+    heartGlow.classList.add('draw');
+
+    function animateRay(timestamp){
+      if(!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / drawDuration, 1);
+
+      // get point on path
+      const pt = svgPath.getPointAtLength(totalLen * (1 - progress));
+      // position ray at that point
+      if(raySpr){
+        raySpr.setAttribute('x', pt.x - 27);
+        raySpr.setAttribute('y', pt.y - 27);
+      }
+
+      // spawn golden particles behind ray
+      if(Math.random() < .6){
+        spawnHeartParticle(pt.x, pt.y);
+      }
+
+      if(progress < 1){
+        requestAnimationFrame(animateRay);
+      } else {
+        // heart done drawing — hide ray, show initials
+        setTimeout(()=>{
+          if(raySpr) {raySpr.style.transition='opacity .5s';raySpr.style.opacity='0';}
+        },300);
+      }
+    }
+    setTimeout(()=>requestAnimationFrame(animateRay), 400);
+
+    // Draw arrow
+    setTimeout(()=>{
+      const ap=document.getElementById('arrow-path');
+      if(ap) ap.classList.add('draw');
+    },3600);
+    // arrow head/tail
+    setTimeout(()=>{
+      const ah=document.getElementById('arrow-head');
+      const at=document.getElementById('arrow-tail');
+      if(ah){ah.style.opacity='1';ah.style.transition='opacity .4s';}
+      if(at){at.style.opacity='1';at.style.transition='opacity .4s';}
+    },4700);
+    // Initials — handwritten reveal (one by one)
+    setTimeout(()=>{
+      const j=document.getElementById('initials-J');
+      if(j){j.style.transition='opacity .5s ease';j.style.opacity='1';}
+    },5200);
+    setTimeout(()=>{
+      const p=document.getElementById('initials-plus');
+      if(p){p.style.transition='opacity .5s ease';p.style.opacity='1';}
+    },5600);
+    setTimeout(()=>{
+      const m=document.getElementById('initials-M');
+      if(m){m.style.transition='opacity .5s ease';m.style.opacity='1';}
+      heartAnimActive = false;
+    },6000);
+  }
+
+  // ── Scroll reveal ──
+  const ro=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target);}});
+  },{threshold:.1});
+  document.querySelectorAll('.reveal,.reveal-scale,.reveal-glow,.swamp-div').forEach(el=>ro.observe(el));
+
+  // ── Float animation on scene images when visible ──
+  const floatObs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting) e.target.classList.add('floating');
+      else e.target.classList.remove('floating');
+    });
+  },{threshold:.2});
+  document.querySelectorAll('.scene-img-float').forEach(el=>floatObs.observe(el));
+
+  // ── Parallax (multi-layer with distinct speeds) ──
+  let tiltX=0, tiltY=0;
+  function par(){
+    const sy=scrollY;
+    document.querySelectorAll('.p-layer[data-speed]').forEach(el=>{
+      const speed = parseFloat(el.dataset.speed);
+      const yOff = sy * speed;
+      const tX = tiltX * speed * 15;
+      const tY = tiltY * speed * 15;
+      el.style.transform=`translate3d(${tX}px,${yOff+tY}px,0)`;
+    });
+  }
+  window.addEventListener('scroll',par,{passive:true});
+
+  // ── DeviceOrientation tilt (mobile) ──
+  if(window.DeviceOrientationEvent && isMobile){
+    window.addEventListener('deviceorientation',(e)=>{
+      if(e.gamma!==null) tiltX = (e.gamma / 45); // -1 to 1
+      if(e.beta!==null)  tiltY = ((e.beta-45) / 45);
+      tiltX = Math.max(-1, Math.min(1, tiltX));
+      tiltY = Math.max(-1, Math.min(1, tiltY));
+    },{passive:true});
+  }
+
+  // ── Zoom ──
+  function zm(){
+    document.querySelectorAll('.zoom-wrap').forEach(el=>{
+      const rect=el.closest('.scene')?.getBoundingClientRect();
+      if(!rect)return;
+      const t=Math.max(0,1-Math.abs(rect.top+rect.height/2-innerHeight/2)/innerHeight);
+      const sx = el.style.transform.includes('scaleX(-1)') ? -1 : 1;
+      el.style.transform=`scaleX(${sx}) scale(${1+t*.055})`;
+    });
+  }
+  window.addEventListener('scroll',zm,{passive:true});
+
+  // ── Scroll hint ──
+  window.addEventListener('scroll',()=>{
+    document.getElementById('scroll-hint').style.opacity=scrollY>100?'0':'1';
+  },{passive:true});
+}
+</script>
+</body>
+</html>
